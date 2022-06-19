@@ -11,9 +11,10 @@ from loader import dp
 
 class adminState(StatesGroup):
     userSearch = State()
+    finish = State()
 
 
-@dp.message_handler(commands=['admin'], state='*')
+@dp.message_handler(state='*', commands=['admin'])
 async def adminMenu(message: types.Message):
     if message.from_user.id in ADMINS:
         await message.answer("⚙️Вы находитесь в панели управления", reply_markup=ADMIN_MENU_KB)
@@ -41,6 +42,18 @@ async def userSearchInput(message: types.Message):
         else:
             await message.answer(f"<b>👤Пользователь(<code>{response[0]}</code>)</b>\n"
                                  f"<b>💵Баланс в боте:</b> {response[1]}", parse_mode=ParseMode.HTML)
+            await adminState.finish.set()
     else:
         await message.answer("Вы должны ввести id пользователя.\n"
                              "Подсказка: узнать можно командой /getid")
+
+
+@dp.callback_query_handler(state='*', text='restart')
+async def restartBotText(call: types.CallbackQuery):
+    if call.from_user.id in ADMINS:
+        import os
+        import sys
+        await call.message.answer("⏳Бот будет перезапущен. . .")
+        await call.answer()
+        os.system("sh restart.sh")
+        sys.exit()

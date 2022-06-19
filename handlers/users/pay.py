@@ -18,6 +18,7 @@ p2p = AioQiwiP2P(auth_key=QIWI_PRIV_KEY)
 
 class payState(StatesGroup):
     amount = State()
+    finish = State()
 
 
 @dp.callback_query_handler(state='*', text='pay')
@@ -45,8 +46,9 @@ async def amountInput(message: types.Message):
         await dp.bot.edit_message_reply_markup(chat_id=msg["chat"]["id"],
                                                message_id=msg['message_id'],
                                                reply_markup=kb)
+        await payState.finish.set()
     else:
-        await message.answer("❌Вы должны ввести целое число!")
+        await message.answer("❌Вы должны ввести целое число!", reply_markup=BACK_TO_MENU_KB)
 
 
 @dp.callback_query_handler(Regexp('checkPay'), state='*')
